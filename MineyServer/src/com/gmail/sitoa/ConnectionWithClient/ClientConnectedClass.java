@@ -64,7 +64,7 @@ messageListeners = new ArrayList<MessageListener>();
 		addMessageListener(this);
 		Thread thred = new Thread(this);
 		thred.start();
-		
+
 
 	}
 	public void reachedMessage(String name, String value) {
@@ -121,6 +121,26 @@ messageListeners = new ArrayList<MessageListener>();
 
 	@Override
 	public void messageThrow(NetworkCatchEvent e) {
+		String msgType = e.getName();
+		String msgvalue = e.getValue();
+		if(msgType.equals("close")){
+			try {
+				close();
+			} catch (IOException e1) {
+				// TODO 自動生成された catch ブロック
+				e1.printStackTrace();
+			}
+		}
+		//サーバー別型コイン
+		if(msgType.equals("addCoin")){
+			addCoin(msgvalue);
+		}
+		if(msgType.equals("addExp")){
+			addExp(msgvalue);
+		}
+		if(msgType.equals("setinfo")){
+			setting(msgvalue);
+		}
 
 
 	}
@@ -141,6 +161,37 @@ messageListeners = new ArrayList<MessageListener>();
 		}catch(Exception err){
 
 		}
+
+	}
+
+	public boolean addCoin(String value){
+		String[] lines = value.split("-");
+		String player = lines[0];
+		String amount = lines[1];
+
+
+
+		return false;
+	}
+
+	public boolean addExp(String value){
+		String[] lines = value.split("-");
+		String player = lines[0];
+		String amount = lines[1];
+
+		return false;
+
+	}
+
+	public boolean setting(String value){
+		String[] lines = value.split("-");
+		String gameid = lines[0];
+		String serverid = lines[1];
+		setGameID(gameid);
+		setServerID(serverid);
+		System.out.println(ServerID + "ServerSetting Complete!  Ready for Use");
+
+		return false;
 
 	}
 
