@@ -1,5 +1,6 @@
 package com.gmail.sitoa.Controll;
 
+import java.sql.SQLException;
 import java.util.Scanner;
 
 import com.gmail.sitoa.ConnectionWithClient.ServerSocketClass;
@@ -53,6 +54,16 @@ public class TerminalClass implements Runnable{
 			DBConnectionClass dbc = DBConnectionClass.getInstance();
 			dbc.dbdisconnect();
 			System.exit(100);
+		}
+		if(cmd.equals("setquery")){
+			Scanner sc1 = new Scanner(System.in);
+			DBConnectionClass dbc = DBConnectionClass.getInstance();
+			try {
+				dbc.donotresult(sc1.nextLine());
+			} catch (SQLException e) {
+				// TODO 自動生成された catch ブロック
+				e.printStackTrace();
+			}
 			
 		}
 

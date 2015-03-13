@@ -7,11 +7,15 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.EventListener;
 import java.util.EventObject;
 
 import com.gmail.sitoa.ConnectionWithClient.NetworkCatchEvent.MessageListener;
+import com.gmail.sitoa.Datebase.DBConnectionClass;
+import com.gmail.sitoa.Datebase.DBMakeQueryClass;
 
 
 
@@ -54,8 +58,10 @@ class NetworkCatchEvent extends EventObject{
 public class ClientConnectedClass implements Runnable,MessageListener{
 	private Socket sc;
 	String GameID = "";
+	String owner = "unknown";
 	String ServerID = "";
 	boolean activation = false;
+	int gamecategory = 0;
 	private ArrayList<MessageListener> messageListeners;
 
 	ClientConnectedClass(Socket socket){
@@ -83,12 +89,28 @@ messageListeners = new ArrayList<MessageListener>();
 	messageListeners.remove(l);
 	}
 
+	public void setcategory(int i){
+		gamecategory = i;
+	}
 
 	public void setGameID(String id){
 		GameID = id;
 	}
 	public void setServerID(String id){
 		ServerID = id;
+	}
+
+	public void setOwner(String id){
+		owner = id;
+	}
+	public void setactivation(String activate){
+		if(activate.equals("true")){
+			activation = true;
+		}else{
+			activation = false;
+		}
+
+
 	}
 
 
@@ -99,13 +121,11 @@ messageListeners = new ArrayList<MessageListener>();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 			while(!sc.isClosed()){
 				String line =  reader.readLine();
-				//[gameid].[serverid].[command].[value]
+				//[command].[value]
 				System.out.println("NetworkInput:"+line);
-				String[] lines = line.split(".",4);
-						 GameID = lines[0];
-						 ServerID = lines[1];
-						String Command = lines[2];
-						String value = lines[3];
+				String[] lines = line.split(" ");
+						String Command = lines[0];
+						String value = lines[1];
 						reachedMessage(Command,value);
 
 
@@ -135,11 +155,17 @@ messageListeners = new ArrayList<MessageListener>();
 		if(msgType.equals("addCoin")){
 			addCoin(msgvalue);
 		}
-		if(msgType.equals("addExp")){
-			addExp(msgvalue);
+		if(msgType.equals("addMny")){
+			addMny(msgvalue);
+		}
+		if(msgType.equals("deletaMny")){
+			deletaMny(msgvalue);
+		}
+		if(msgType.equals("deletaCoin")){
+			deletaCoin(msgvalue);
 		}
 		if(msgType.equals("setinfo")){
-			setting(msgvalue);
+			sendMessage(setting(msgvalue));
 		}
 
 
@@ -156,6 +182,7 @@ messageListeners = new ArrayList<MessageListener>();
 			PrintWriter write = new PrintWriter(output);
 			write.println(str);
 			write.flush();
+			System.out.println(str);
 
 
 		}catch(Exception err){
@@ -168,13 +195,37 @@ messageListeners = new ArrayList<MessageListener>();
 		String[] lines = value.split("-");
 		String player = lines[0];
 		String amount = lines[1];
+		Client cl = new Client(player);
+		cl.checkjoin(GameID+"_"+ServerID);
+
+
+
+
 
 
 
 		return false;
 	}
 
-	public boolean addExp(String value){
+	public boolean addMny(String value){
+		String[] lines = value.split("-");
+		String player = lines[0];
+		String amount = lines[1];
+
+
+		return false;
+
+	}public boolean deletaCoin(String value){
+		String[] lines = value.split("-");
+		String player = lines[0];
+		String amount = lines[1];
+
+
+
+		return false;
+	}
+
+	public boolean deletaMny(String value){
 		String[] lines = value.split("-");
 		String player = lines[0];
 		String amount = lines[1];
@@ -183,17 +234,56 @@ messageListeners = new ArrayList<MessageListener>();
 
 	}
 
-	public boolean setting(String value){
+	public String setting(String value){
 		String[] lines = value.split("-");
 		String gameid = lines[0];
 		String serverid = lines[1];
+		String owner = "unknown";
+		if(lines.length >= 3){
+			owner = lines[2];
+		}
 		setGameID(gameid);
 		setServerID(serverid);
+		DBConnectionClass dbc = DBConnectionClass.getInstance();
+		String query = DBMakeQueryClass.getGameInfo(gameid, serverid);
+		try {
+			ResultSet result = dbc.doresult(query);
+			if(!result.next()){
+				query = DBMakeQueryClass.setGameinfo(gameid, serverid, owner);
+
+				try {
+					dbc.donotresult(query);
+				} catch (SQLException e1) {
+					e1.printStackTrace();
+				}
+				query = DBMakeQueryClass.createGameTable(gameid, serverid);
+				try{
+					dbc.donotresult(query);
+				} catch (SQLException e1) {
+					e1.printStackTrace();
+				}
+			}
+			while(result.next()){
+			owner = result.getString("owner");
+			setOwner(owner);
+			setactivation(result.getString("Activation"));
+			setcategory(result.getInt("GameCategory"));
+			}
+
+			result.getStatement().getConnection().setAutoCommit(true);
+
+		} catch (SQLException e) {
+
+			e.printStackTrace();
+		}
+
 		System.out.println(ServerID + "ServerSetting Complete!  Ready for Use");
 
-		return false;
+		return "setinfo accept";
 
 	}
+
+
 
 
 

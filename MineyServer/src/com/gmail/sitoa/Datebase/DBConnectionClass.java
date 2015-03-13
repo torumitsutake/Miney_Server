@@ -113,31 +113,22 @@ public class DBConnectionClass {
 
 		  public  void donotresult(String query) throws SQLException{
 			  Statement stat = conn.createStatement();
-			  try{
 				  stat.execute(query);
-			  }catch(SQLException se){
-				  System.out.println(se);
-
-			  }finally{
 				  stat.close();
-			  }
+
 
 		  }
 
 		  public  ResultSet doresult(String query) throws SQLException{
 			  Statement stat = conn.createStatement();
+			  conn.setAutoCommit(false);
 			  ResultSet result = null;
-			  try{
 				   result = stat.executeQuery(query);
-			  }catch(SQLException se){
-				  System.out.println(se);
 
-			  }finally{
-				  stat.close();
-			  }
+
 			  return result;
 		  }
-		  
+
 		  public boolean dbdisconnect(){
 			  try {
 				conn.close();
@@ -147,10 +138,11 @@ public class DBConnectionClass {
 				e.printStackTrace();
 				  return false;
 			}
-			  
-			  
-			  
 		  }
+
+
+
+
 
 
 		}
